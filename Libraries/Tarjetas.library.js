@@ -24,16 +24,26 @@ export async function validarTarjeta(datos) {
     return { valido: false, mensaje: "Código de seguridad inválido." };
   }
 
-  // Busca la tarjeta en DB
-   const tarjetas = await Tarjetas.findAll();
+  // Obtener últimos 4 dígitos para búsqueda
+  const numeroIngresado = numerotarjeta.toString().replace(/\s+/g, '').replace(/-/g, '');
+  const ultimosCuatroIngresados = numeroIngresado.slice(-4);
+  
+  console.log("Buscando tarjeta con últimos 4 dígitos:", ultimosCuatroIngresados);
+
+  // Busca todas las tarjetas en DB
+  const tarjetas = await Tarjetas.findAll();
+  
+  // Buscar tarjeta que coincida con los últimos 4 dígitos
   const tarjeta = tarjetas.find(t => {
-    const ultimosCuatroDB = t.numerotarjeta.toString().slice(-4);
-    return ultimosCuatroDB === ultimosCuatro;
+    const numeroDB = t.numerotarjeta.toString().replace(/\s+/g, '').replace(/-/g, '');
+    const ultimosCuatroDB = numeroDB.slice(-4);
+    return ultimosCuatroDB === ultimosCuatroIngresados;
   });
 
   if (!tarjeta) {
     return { valido: false, mensaje: "Tarjeta no registrada en el sistema." };
   }
+
   // Valida que el nombre coincida
   if (tarjeta.nombretarjetahabiente.trim().toLowerCase() !== nombretarjetahabiente.trim().toLowerCase()) {
     return { valido: false, mensaje: "Nombre del titular incorrecto." };
@@ -74,10 +84,13 @@ export async function validarTarjeta(datos) {
   if (monto && tarjeta.saldo < monto) {
     return { valido: false, mensaje: "Saldo insuficiente." };
   }
- if (monto) {
+
+  // Descontar monto si aplica
+  if (monto) {
     tarjeta.saldo = tarjeta.saldo - monto;
     await tarjeta.save(); 
   }
+
   // Respuesta
   return {
     valido: true,
@@ -85,12 +98,17 @@ export async function validarTarjeta(datos) {
     titular: tarjeta.nombretarjetahabiente,
     identificacion: tarjeta.identificaciontarjetahabiente,
     saldoDisponible: tarjeta.saldo,
-    tarjetaEnmascarada: enmascararTarjeta(numerotarjeta)
+    tarjetaEnmascarada: enmascararTarjeta(tarjeta.numerotarjeta)
   };
 }
 
-// Enmascara tipo VISA/MasterCard
-function enmascararTarjeta(numero) {
-  const str = numero.toString();
-  return `${str.slice(0, 4)} **** **** ${str.slice(-4)}`;
+// Función auxiliar para enmascarar tarjeta
+function enmascararTarjeta(numeroTarjeta) {
+  const numeroStr = numeroTarjeta.toString().replace(/\s+/g, '').replace(/-/g, '');
+  if (numeroStr.length <= 4) {
+    return numeroStr;
+  }
+  const ultimosCuatro = numeroStr.slice(-4);
+  return '•••• •••• •••• ' + ultimosCuatro;
 }
+
