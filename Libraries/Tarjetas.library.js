@@ -1,5 +1,7 @@
 import { Tarjetas } from "../Models/Tarjetas.model.js";
 import moment from "moment";
+import { Sinpe } from "../Models/Sinpe.model.js";
+
 
 export async function validarTarjeta(datos) {
   const { numerotarjeta, nombretarjetahabiente, identificaciontarjetahabiente, codigoseguridad, monto } = datos;
@@ -110,5 +112,58 @@ function enmascararTarjeta(numeroTarjeta) {
   }
   const ultimosCuatro = numeroStr.slice(-4);
   return '•••• •••• •••• ' + ultimosCuatro;
+}
+
+
+export async function validarSinpe(datos) {
+  const { nreferencia, ntelefono, monto } = datos;
+
+  // Validación de campos
+  if (!nreferencia && !ntelefono) {
+    return { valido: false, mensaje: "Debe enviar la referencia o el teléfono del SINPE" };
+  }
+  if (!monto) {
+    return { valido: false, mensaje: "Debe enviar el monto del SINPE" };
+  }
+
+  try {
+    // Buscar registro confirmado en la DB
+    const registro = await Sinpe.findOne({
+      where: {
+        monto,
+        estado: 1, // solo SINPE confirmados
+        ...(nreferencia ? { nreferencia } : {}),
+        ...(ntelefono ? { ntelefono } : {})
+      }
+    });
+
+    if (!registro) {
+      return {
+        valido: false,
+        mensaje: "No se ha encontrado un SINPE válido con los datos proporcionados"
+      };
+    }
+
+    // Si encuentra registro válido
+    return {
+      valido: true,
+      mensaje: "SINPE válido, puede agendar la cita",
+      registro: {
+        nreferencia: registro.nreferencia,
+        ntelefono: registro.ntelefono,
+        monto: registro.monto,
+        fechahora: moment(registro.fechahora).format("YYYY-MM-DD HH:mm:ss"),
+        estado: registro.estado
+      }
+    };
+
+  } catch (error) {
+    console.error("Error validando SINPE:", error);
+    return {
+      valido: false,
+      mensaje: "Error interno al validar SINPE",
+      error: error.message
+    };
+  }
 }
 
