@@ -1,8 +1,8 @@
 import express from "express";
-import Psicologos from "../Services/Tarjetas.service.js";
+import tarjetas from "../Services/Tarjetas.service.js";
 
 const router = express.Router();
 
-router.use("/Tarjetas", Psicologos);
+router.use("/Tarjetas", tarjetas);
 
 export default router;

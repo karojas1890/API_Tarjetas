@@ -10,5 +10,5 @@ app.use("/api", router);
 conectarDB();
 
 app.listen(3000, () => {
-  console.log("🚀 API del Colegio de Profecionales en psicologia corriendo en http://localhost:3000");
+  console.log("🚀 API del Banco Panamericano corriendo en http://localhost:3000");
 });

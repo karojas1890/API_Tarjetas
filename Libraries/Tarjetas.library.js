@@ -25,12 +25,15 @@ export async function validarTarjeta(datos) {
   }
 
   // Busca la tarjeta en DB
-  const tarjeta = await Tarjetas.findByPk(numerotarjeta);
+   const tarjetas = await Tarjetas.findAll();
+  const tarjeta = tarjetas.find(t => {
+    const ultimosCuatroDB = t.numerotarjeta.toString().slice(-4);
+    return ultimosCuatroDB === ultimosCuatro;
+  });
 
   if (!tarjeta) {
     return { valido: false, mensaje: "Tarjeta no registrada en el sistema." };
   }
-
   // Valida que el nombre coincida
   if (tarjeta.nombretarjetahabiente.trim().toLowerCase() !== nombretarjetahabiente.trim().toLowerCase()) {
     return { valido: false, mensaje: "Nombre del titular incorrecto." };
