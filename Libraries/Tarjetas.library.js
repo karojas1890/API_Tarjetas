@@ -1,6 +1,6 @@
 import { Tarjetas } from "../Models/Tarjetas.model.js";
 import moment from "moment";
-import { Sinpe } from "../Models/Sinpe.model.js";
+import { Sinpe } from "../Models/sinpe.model.js";
 
 
 export async function validarTarjeta(datos) {
